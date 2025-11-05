@@ -1,0 +1,13 @@
+# Ignore IDE-specific files (e.g., Eclipse, IntelliJ)
+.metadata/
+
+# Ignore compiled files
+bin/
+
+# Ignore Eclipse configuration files
+.classpath
+.project
+
+# Optional: Ignore other files you don't want to track
+*.log
+*.tmp
