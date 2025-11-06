@@ -36,4 +36,9 @@ public class RouteBean {
 		public void setFare(double fare) {
 			this.fare = fare;
 		}
+		@Override
+		public String toString() {
+			return "RouteBean [routeID=" + routeID + ", source=" + source + ", destination=" + destination
+					+ ", travelDuration=" + travelDuration + ", fare=" + fare + "]";
+		}
 }

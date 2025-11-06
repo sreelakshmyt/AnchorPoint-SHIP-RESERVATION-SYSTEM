@@ -23,6 +23,13 @@ public class CredentialsBean {
 	public void setUserType(String userType) {
 		this.userType = userType;
 	}
+	public CredentialsBean(String userID, String password, String userType, int loginStatus) {
+		super();
+		this.userID = userID;
+		this.password = password;
+		this.userType = userType;
+		this.loginStatus = loginStatus;
+	}
 	public int getLoginStatus() {
 		return loginStatus;
 	}

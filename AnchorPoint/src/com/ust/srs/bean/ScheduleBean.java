@@ -28,6 +28,11 @@ public class ScheduleBean {
 		}
 		public void setStartDate(String startDate) {
 			this.startDate = startDate;
+		}
+		@Override
+		public String toString() {
+			return "ScheduleBean [scheduleID=" + scheduleID + ", shipID=" + shipID + ", routeID=" + routeID
+					+ ", startDate=" + startDate + "]";
 		} 
 
 }

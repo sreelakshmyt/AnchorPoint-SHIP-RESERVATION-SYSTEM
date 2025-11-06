@@ -1,252 +1,198 @@
 package com.ust.srs.dao;
 
-import java.util.ArrayList;
-import java.util.Scanner;
-
+import java.util.*;
 import javax.swing.JOptionPane;
-
-import com.ust.srs.bean.PassengerBean;
-import com.ust.srs.bean.RouteBean;
-import com.ust.srs.bean.ScheduleBean;
-import com.ust.srs.bean.ShipBean;
+import com.ust.srs.bean.*;
 import com.ust.srs.service.Administrator;
+import com.ust.srs.util.*;
 
-public class AdministratorDao implements Administrator{
-	 // In-memory lists instead of a database
-    private static ArrayList<ShipBean> ships = new ArrayList<>();
-    private static ArrayList<RouteBean> routes = new ArrayList<>();
-    private static ArrayList<ScheduleBean> schedules = new ArrayList<>();
-    
-    // for command-line input
-    private static Scanner sc = new Scanner(System.in);
+public class AdministratorDao implements Administrator {
 
-    // ---------------- SHIP ----------------
+    // AD-001 Add Ship
+//    @Override
+//    public String addShip(ShipBean shipbean) {
+//        String shipName = JOptionPane.showInputDialog("Enter Ship Name:");
+//        String source = JOptionPane.showInputDialog("Enter Source:");
+//        String destination = JOptionPane.showInputDialog("Enter Destination:");
+//        String duration = JOptionPane.showInputDialog("Enter Travel Duration:");
+//        int seatCap = Integer.parseInt(JOptionPane.showInputDialog("Enter Seating Capacity:"));
+//        int resCap = Integer.parseInt(JOptionPane.showInputDialog("Enter Reservation Capacity:"));
+//
+////        shipbean.setShipID(IDGenerator.generateShipID(shipName));
+//
+//        String id = IDGenerator.generateShipID();
+//        shipbean.setShipName(id);
+//        shipbean.setShipName(shipName);
+//        shipbean.setSeatingCapacity(seatCap);
+//        shipbean.setReservationCapacity(resCap);
+//
+//        DataStore.ships.put(shipbean.getShipID(), shipbean);
+//
+//        JOptionPane.showMessageDialog(null, "Ship Added Successfully\n" + shipbean);
+//        return "SUCCESS";
+//    }
+	
+	@Override
+	public String addShip(ShipBean shipbean) {
+	    // Take ship details from user
+	    String name = JOptionPane.showInputDialog("Enter Ship Name:");
+	    String source = JOptionPane.showInputDialog("Enter Source:");
+	    String destination = JOptionPane.showInputDialog("Enter Destination:");
+	    int seatCap = Integer.parseInt(JOptionPane.showInputDialog("Enter Seating Capacity:"));
+	    int resCap = Integer.parseInt(JOptionPane.showInputDialog("Enter Reservation Capacity:"));
 
-    @Override
-    public String addShip(ShipBean shipbean) {
-        // Option 1: take data via JOptionPane
-        String name = JOptionPane.showInputDialog("Enter Ship Name:");
-        int seatCap = Integer.parseInt(JOptionPane.showInputDialog("Enter Seating Capacity:"));
-        int resCap = Integer.parseInt(JOptionPane.showInputDialog("Enter Reservation Capacity:"));
+	    // ✅ Generate a unique Ship ID
+	    String id = IDGenerator.generateShipID();
 
-        // set bean data
-        shipbean.setShipName(name);
-        shipbean.setSeatingCapacity(seatCap);
-        shipbean.setReservationCapacity(resCap);
+	    // ✅ Set all data into the ShipBean object
+	    shipbean.setShipID(id);
+	    shipbean.setShipName(name);
+	    shipbean.setSeatingCapacity(seatCap);
+	    shipbean.setReservationCapacity(resCap);
 
-        // generate simple ID
-        String id = "SHP" + (ships.size() + 1);
-        shipbean.setShipID(id);
+	    // Optional: Store source/destination if ShipBean has those fields
+	    // shipbean.setSource(source);
+	    // shipbean.setDestination(destination);
 
-        ships.add(shipbean);
+	    // ✅ Save this ship into the in-memory "database"
+	    DataStore.ships.put(id, shipbean);
 
-        JOptionPane.showMessageDialog(null, "Ship Added Successfully! Ship ID: " + id);
-        return "SUCCESS";
-    }
+	    // ✅ Confirm success
+	    JOptionPane.showMessageDialog(null,
+	        "Ship Added Successfully!\n" +
+	        "Ship ID: " + id + "\n" +
+	        "Name: " + name + "\n" +
+	        "Seating Capacity: " + seatCap);
 
+	    return "SUCCESS";
+	}
+
+
+    // Modify Reservation Capacity / WL
     @Override
     public boolean modifyShip(ShipBean shipbean) {
         String id = JOptionPane.showInputDialog("Enter Ship ID to Modify:");
-        for (ShipBean s : ships) {
-            if (s.getShipID().equalsIgnoreCase(id)) {
-                String newName = JOptionPane.showInputDialog("Enter New Name:", s.getShipName());
-                int newCap = Integer.parseInt(JOptionPane.showInputDialog("Enter New Seating Capacity:", s.getSeatingCapacity()));
-
-                s.setShipName(newName);
-                s.setSeatingCapacity(newCap);
-                s.setReservationCapacity(newCap);
-                JOptionPane.showMessageDialog(null, "Ship Updated Successfully!");
-                return true;
-            }
+        ShipBean s = DataStore.ships.get(id);
+        if (s == null) {
+            JOptionPane.showMessageDialog(null, "Ship not found!");
+            return false;
         }
-        JOptionPane.showMessageDialog(null, "Ship Not Found!");
-        return false;
+        int newRes = Integer.parseInt(JOptionPane.showInputDialog("Enter new Reservation Capacity:", s.getReservationCapacity()));
+        s.setReservationCapacity(newRes);
+        JOptionPane.showMessageDialog(null, "Reservation Capacity Updated!");
+        return true;
     }
 
+    // Delete Ship
     @Override
     public int removeShip(ArrayList<String> shipIds) {
-        int count = 0;
+        int removed = 0;
         for (String id : shipIds) {
-            for (ShipBean s : ships) {
-                if (s.getShipID().equalsIgnoreCase(id)) {
-                    ships.remove(s);
-                    count++;
-                    break;
-                }
-            }
+            if (DataStore.ships.remove(id) != null) removed++;
         }
-        JOptionPane.showMessageDialog(null, count + " Ship(s) Removed");
-        return count;
+        JOptionPane.showMessageDialog(null, removed + " ship(s) removed");
+        return removed;
     }
 
-    @Override
-    public ShipBean viewByShipId(String shipId) {
-        for (ShipBean s : ships) {
-            if (s.getShipID().equalsIgnoreCase(shipId)) {
-                JOptionPane.showMessageDialog(null, s.toString());
-                return s;
-            }
-        }
-        JOptionPane.showMessageDialog(null, "Ship Not Found!");
-        return null;
-    }
-
-    @Override
-    public ArrayList<ShipBean> viewByAllShips() {
-        StringBuilder sb = new StringBuilder("All Ships:\n");
-        for (ShipBean s : ships) sb.append(s.toString()).append("\n");
-        JOptionPane.showMessageDialog(null, sb.toString());
-        return ships;
-    }
-
-    // ---------------- ROUTE ----------------
-
+    // AD-005 Add Route
     @Override
     public String addRoute(RouteBean routebean) {
-        String src = JOptionPane.showInputDialog("Enter Source:");
+        String source = JOptionPane.showInputDialog("Enter Source:");
         String dest = JOptionPane.showInputDialog("Enter Destination:");
-        double fare = Double.parseDouble(JOptionPane.showInputDialog("Enter Fare:"));
+        double distance = Double.parseDouble(JOptionPane.showInputDialog("Enter Distance (km):"));
+        double costPerKm = Double.parseDouble(JOptionPane.showInputDialog("Enter Cost/km:"));
 
-        routebean.setSource(src);
+        routebean.setRouteID(IDGenerator.generateRouteID(source, dest));
+        routebean.setSource(source);
         routebean.setDestination(dest);
-        routebean.setFare(fare);
-        String id = "ROU" + (routes.size() + 1);
-        routebean.setRouteID(id);
-        routes.add(routebean);
-        JOptionPane.showMessageDialog(null, "Route Added Successfully! Route ID: " + id);
+        routebean.setTravelDuration(distance + "km");
+        routebean.setFare(distance * costPerKm);
+
+        DataStore.routes.put(routebean.getRouteID(), routebean);
+        JOptionPane.showMessageDialog(null, "Route Added Successfully\n" + routebean);
         return "SUCCESS";
     }
 
+    // Modify Route
     @Override
     public boolean modifyRoute(RouteBean routebean) {
-        String id = JOptionPane.showInputDialog("Enter Route ID to Modify:");
-        for (RouteBean r : routes) {
-            if (r.getRouteID().equalsIgnoreCase(id)) {
-                String newSrc = JOptionPane.showInputDialog("Enter New Source:", r.getSource());
-                String newDest = JOptionPane.showInputDialog("Enter New Destination:", r.getDestination());
-                double newFare = Double.parseDouble(JOptionPane.showInputDialog("Enter New Fare:", r.getFare()));
-
-                r.setSource(newSrc);
-                r.setDestination(newDest);
-                r.setFare(newFare);
-                JOptionPane.showMessageDialog(null, "Route Updated!");
-                return true;
-            }
-        }
-        JOptionPane.showMessageDialog(null, "Route Not Found!");
-        return false;
+        String id = JOptionPane.showInputDialog("Enter Route ID:");
+        RouteBean r = DataStore.routes.get(id);
+        if (r == null) return false;
+        double newFare = Double.parseDouble(JOptionPane.showInputDialog("Enter New Fare:", r.getFare()));
+        r.setFare(newFare);
+        JOptionPane.showMessageDialog(null, "Route Fare Updated!");
+        return true;
     }
 
+    // Delete Route
     @Override
     public int removeRoute(String routeid) {
-        for (RouteBean r : routes) {
-            if (r.getRouteID().equalsIgnoreCase(routeid)) {
-                routes.remove(r);
-                JOptionPane.showMessageDialog(null, "Route Removed!");
-                return 1;
-            }
-        }
-        JOptionPane.showMessageDialog(null, "Route Not Found!");
-        return 0;
+        return (DataStore.routes.remove(routeid) != null) ? 1 : 0;
     }
 
-    @Override
-    public RouteBean viewByRouteId(String routeid) {
-        for (RouteBean r : routes) {
-            if (r.getRouteID().equalsIgnoreCase(routeid)) {
-                JOptionPane.showMessageDialog(null, r.toString());
-                return r;
-            }
-        }
-        JOptionPane.showMessageDialog(null, "Route Not Found!");
-        return null;
-    }
-
-    @Override
-    public ArrayList<RouteBean> viewByAllRoute() {
-        StringBuilder sb = new StringBuilder("All Routes:\n");
-        for (RouteBean r : routes) sb.append(r.toString()).append("\n");
-        JOptionPane.showMessageDialog(null, sb.toString());
-        return routes;
-    }
-
-    // ---------------- SCHEDULE ----------------
-
+    // AD-009 Add Schedule
     @Override
     public String addSchedule(ScheduleBean schedulebean) {
         String shipId = JOptionPane.showInputDialog("Enter Ship ID:");
         String routeId = JOptionPane.showInputDialog("Enter Route ID:");
-        String date = JOptionPane.showInputDialog("Enter Start Date (dd-mm-yyyy):");
+        String day = JOptionPane.showInputDialog("Enter Schedule Days (Mon,Wed,Fri):");
 
+        schedulebean.setScheduleID(IDGenerator.generateScheduleID(shipId, routeId));
         schedulebean.setShipID(shipId);
         schedulebean.setRouteID(routeId);
-        // just store date string for simplicity
-        schedulebean.setScheduleID("SCH" + (schedules.size() + 1));
 
-        schedules.add(schedulebean);
-        JOptionPane.showMessageDialog(null, "Schedule Added! Schedule ID: " + schedulebean.getScheduleID());
+        DataStore.schedules.put(schedulebean.getScheduleID(), schedulebean);
+        JOptionPane.showMessageDialog(null, "Schedule Added: " + schedulebean.getScheduleID() + " for " + day);
         return "SUCCESS";
     }
 
     @Override
     public boolean modifySchedule(ScheduleBean schedulebean) {
-        String id = JOptionPane.showInputDialog("Enter Schedule ID to Modify:");
-        for (ScheduleBean s : schedules) {
-            if (s.getScheduleID().equalsIgnoreCase(id)) {
-                String newShipId = JOptionPane.showInputDialog("Enter New Ship ID:", s.getShipID());
-                String newRouteId = JOptionPane.showInputDialog("Enter New Route ID:", s.getRouteID());
-
-                s.setShipID(newShipId);
-                s.setRouteID(newRouteId);
-                JOptionPane.showMessageDialog(null, "Schedule Updated!");
-                return true;
-            }
-        }
-        JOptionPane.showMessageDialog(null, "Schedule Not Found!");
-        return false;
+        String id = JOptionPane.showInputDialog("Enter Schedule ID:");
+        ScheduleBean s = DataStore.schedules.get(id);
+        if (s == null) return false;
+        String newRoute = JOptionPane.showInputDialog("Enter New Route ID:", s.getRouteID());
+        s.setRouteID(newRoute);
+        JOptionPane.showMessageDialog(null, "Schedule Modified!");
+        return true;
     }
 
     @Override
     public int removeSchedule(ArrayList<String> scheduleIds) {
         int count = 0;
         for (String id : scheduleIds) {
-            for (ScheduleBean s : schedules) {
-                if (s.getScheduleID().equalsIgnoreCase(id)) {
-                    schedules.remove(s);
-                    count++;
-                    break;
-                }
-            }
+            if (DataStore.schedules.remove(id) != null) count++;
         }
-        JOptionPane.showMessageDialog(null, count + " Schedule(s) Removed");
+        JOptionPane.showMessageDialog(null, count + " schedule(s) deleted");
         return count;
     }
 
-    @Override
-    public ScheduleBean viewByScheduleId(String scheduleid) {
-        for (ScheduleBean s : schedules) {
-            if (s.getScheduleID().equalsIgnoreCase(scheduleid)) {
-                JOptionPane.showMessageDialog(null, s.toString());
-                return s;
-            }
-        }
-        JOptionPane.showMessageDialog(null, "Schedule Not Found!");
-        return null;
-    }
-
-    @Override
-    public ArrayList<ScheduleBean> viewByAllSchedule() {
-        StringBuilder sb = new StringBuilder("All Schedules:\n");
-        for (ScheduleBean s : schedules) sb.append(s.toString()).append("\n");
-        JOptionPane.showMessageDialog(null, sb.toString());
-        return schedules;
-    }
-
-    // ---------------- PASSENGERS ----------------
-
+    // AD-013 View Passenger / Booking Details
     @Override
     public ArrayList<PassengerBean> viewPasengersByShip(String scheduleid) {
-        JOptionPane.showMessageDialog(null, "Passenger list feature not implemented yet.");
-        return new ArrayList<>();
+        ArrayList<PassengerBean> list = new ArrayList<>();
+        for (List<PassengerBean> plist : DataStore.passengers.values()) {
+            for (PassengerBean p : plist) {
+                if (scheduleid.equals(p.getScheduleID())) list.add(p);
+            }
+        }
+        JOptionPane.showMessageDialog(null, list.size() + " passengers found for Schedule " + scheduleid);
+        return list;
     }
+
+    // View Methods
+    @Override
+    public ShipBean viewByShipId(String shipId) { return DataStore.ships.get(shipId); }
+    @Override
+    public RouteBean viewByRouteId(String routeid) { return DataStore.routes.get(routeid); }
+    @Override
+    public ArrayList<ShipBean> viewByAllShips() { return new ArrayList<>(DataStore.ships.values()); }
+    @Override
+    public ArrayList<RouteBean> viewByAllRoute() { return new ArrayList<>(DataStore.routes.values()); }
+    @Override
+    public ArrayList<ScheduleBean> viewByAllSchedule() { return new ArrayList<>(DataStore.schedules.values()); }
+    @Override
+    public ScheduleBean viewByScheduleId(String scheduleid) { return DataStore.schedules.get(scheduleid); }
 }
+
